@@ -1,17 +1,8 @@
-try:
-    import glob
-    import os
-    import sys
+from __future__ import annotations
 
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
+from typing import TYPE_CHECKING, List
 
-    import carla
-except:
-    raise ImportError
-
+import carla
 import numpy as np
 
 from config import *
@@ -20,6 +11,8 @@ from road_user import RoadUser, UserID
 from utils import *
 from world import World
 
+if TYPE_CHECKING:
+    from traffic_manager import TrafficManager
 
 class VehicleManager:
     FIXED_HEIGHT = 0.2
@@ -35,41 +28,41 @@ class VehicleManager:
             self.forward_x = forward_x
             self.forward_y = forward_y
 
-    def __init__(self, traffic_manager, world: World):
-        self.manager = traffic_manager
+    def __init__(self, traffic_manager: TrafficManager, world: World):
+        self.manager: TrafficManager = traffic_manager
 
-        self.world = world
-        self.delta_time = self.world.delta_time
+        self.world: World = world
+        self.delta_time: float = self.world.delta_time
 
-        self.vehicles = []  # carla.Agent
-        self.num_vehicle = 0
+        self.vehicles: List[carla.Actor] = []  # carla.Agent
+        self.num_vehicle: int = 0
 
-        self.positions = None  # np.ndarray: [[x, y], [x, y], ...]
+        self.positions: np.ndarray = None  # np.ndarray: [[x, y], [x, y], ...]
 
         self.speed = None  # np.ndarray: [speed, speed, ...]
         self.desired_speed = None  # np.ndarray: [speed, speed, ...]
 
-        self.com_decel = None  # comfortable deceleration, np.ndarray: [decel, decel, ...]
-        self.max_accel = None  # maximum acceleration, np.ndarray: [accel, accel, ...]
-        self.space_headway = None  # np.ndarray: [space, space, ...]
+        self.com_decel: List[float] = None  # comfortable deceleration, np.ndarray: [decel, decel, ...]
+        self.max_accel: List[float] = None  # maximum acceleration, np.ndarray: [accel, accel, ...]
+        self.space_headway: List[float] = None  # np.ndarray: [space, space, ...]
 
-        self.forward_vector = None  # list: [carla.Vector3D, carla.Vector3D, ...]
-        self.forward_vector_np = None  # np.ndarray: [[x, y], [x, y], ...]
+        self.forward_vector: List[carla.Vector3D] = None  # list: [carla.Vector3D, carla.Vector3D, ...]
+        self.forward_vector_np: np.ndarray = None  # np.ndarray: [[x, y], [x, y], ...]
 
-        self.targets = None  # np.ndarray: [[x, y], [x, y], ...]
+        self.targets: np.ndarray = None  # np.ndarray: [[x, y], [x, y], ...]
 
-        self.lane_index = None  # list: [lane, lane, ...]
+        self.lane_index: List[int] = None  # list: [lane, lane, ...]
 
-        self.users = []  # list: [UserID, UserID, ...]
+        self.users: List[UserID] = []  # list: [UserID, UserID, ...]
 
-        self.half_length = None
-        self.half_width = None
+        self.half_length: List[float] = None
+        self.half_width: List[float] = None
 
-        self.lane_changing_cooldown = None  # list: [cooldown, cooldown, ...]
-        self.lane_changing_target_lane_index = None  # list: [lane, lane, ...]
+        self.lane_changing_cooldown: List[int] = None  # list: [cooldown, cooldown, ...]
+        self.lane_changing_target_lane_index: List[int] = None  # list: [lane, lane, ...]
 
         # Data
-        self.vehicle_spawn_data = []  # VehicleData
+        self.vehicle_spawn_data: List[VehicleManager.VehicleData] = []  # VehicleData
         self.__read_vehicle_data()
 
     def __read_vehicle_data(self):

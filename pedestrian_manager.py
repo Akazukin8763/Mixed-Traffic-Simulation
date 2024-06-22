@@ -1,19 +1,9 @@
-try:
-    import glob
-    import os
-    import sys
-
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-
-    import carla
-except:
-    raise ImportError
+from __future__ import annotations
 
 import math
+from typing import TYPE_CHECKING, List
 
+import carla
 import numpy as np
 
 import vector
@@ -21,6 +11,9 @@ from config import *
 from road_user import RoadUser, UserID
 from utils import *
 from world import World
+
+if TYPE_CHECKING:
+    from traffic_manager import TrafficManager
 
 
 class PedestrianManager:
@@ -40,32 +33,32 @@ class PedestrianManager:
             self.right_y = right_y
             self.crossing = crossing
 
-    def __init__(self, traffic_manager, world: World):
-        self.manager = traffic_manager
+    def __init__(self, traffic_manager: TrafficManager, world: World):
+        self.manager: TrafficManager = traffic_manager
 
-        self.world = world
-        self.delta_time = self.world.delta_time
+        self.world: World = world
+        self.delta_time: float = self.world.delta_time
 
-        self.pedestrians = []  # carla.Agent
-        self.num_pedestrian = 0
+        self.pedestrians: List[carla.Actor] = []  # carla.Agent
+        self.num_pedestrian: int = 0
 
-        self.positions = None  # np.ndarray: [[x, y], [x, y], ...]
-        self.rotations = None  # list: [yaw, yaw, ...]
+        self.positions: np.ndarray = None  # np.ndarray: [[x, y], [x, y], ...]
+        self.rotations: List[float] = None  # list: [yaw, yaw, ...]
 
-        self.velocity = None  # np.ndarray: [[x, y], [x, y], ...]
+        self.velocity: np.ndarray = None  # np.ndarray: [[x, y], [x, y], ...]
         self.desired_speed = None  # np.ndarray: [speed, speed, ...]
 
-        self.forward_vector = None  # list: [carla.Vector3D, carla.Vector3D, ...]
-        self.right_vector = None  # list: [carla.Vector3D, carla.Vector3D, ...]
+        self.forward_vector: List[carla.Vector3D] = None  # list: [carla.Vector3D, carla.Vector3D, ...]
+        self.right_vector: List[carla.Vector3D] = None  # list: [carla.Vector3D, carla.Vector3D, ...]
 
-        self.targets = None  # np.ndarray: [[x, y], [x, y], ...]
+        self.targets: np.ndarray = None  # np.ndarray: [[x, y], [x, y], ...]
 
-        self.lane_index = None  # list: [lane, lane, ...]
+        self.lane_index: List[int] = None  # list: [lane, lane, ...]
 
-        self.users = []  # list: [UserID, UserID, ...]
+        self.users: List[UserID] = []  # list: [UserID, UserID, ...]
 
         # Data
-        self.pedestrian_spawn_data = []  # PedestrianData
+        self.pedestrian_spawn_data: List[PedestrianManager.PedestrianData] = []  # PedestrianData
         self.__read_pedestrian_data()
 
     def __read_pedestrian_data(self):

@@ -1,17 +1,8 @@
-try:
-    import glob
-    import os
-    import sys
+from __future__ import annotations
 
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-    
-    import carla
-except:
-    raise ImportError
+from typing import TYPE_CHECKING, List
 
+import carla
 import numpy as np
 
 import vector
@@ -19,6 +10,9 @@ from config import *
 from road_user import RoadUser, UserID
 from utils import *
 from world import World
+
+if TYPE_CHECKING:
+    from traffic_manager import TrafficManager
 
 
 class BicycleManager():
@@ -35,38 +29,38 @@ class BicycleManager():
             self.forward_x = forward_x
             self.forward_y = forward_y
             
-    def __init__(self, traffic_manager, world: World):
-        self.manager = traffic_manager
+    def __init__(self, traffic_manager: TrafficManager, world: World):
+        self.manager: TrafficManager = traffic_manager
 
-        self.world = world
-        self.delta_time = self.world.delta_time
+        self.world: World = world
+        self.delta_time: float = self.world.delta_time
         
-        self.bicycles = []  # carla.Agent
-        self.num_bicycle = 0
+        self.bicycles: List[carla.Actor] = []  # carla.Agent
+        self.num_bicycle: int = 0
 
-        self.positions = None  # np.ndarray: [[x, y], [x, y], ...]
+        self.positions: np.ndarray = None  # np.ndarray: [[x, y], [x, y], ...]
 
-        self.velocity = None  # np.ndarray: [[x, y], [x, y], ...]
-        self.desired_speed = None  # np.ndarray: [speed, speed, ...]
+        self.velocity: np.ndarray = None  # np.ndarray: [[x, y], [x, y], ...]
+        self.desired_speed: np.ndarray = None  # np.ndarray: [speed, speed, ...]
 
-        self.com_decel = None  # comfortable deceleration, np.ndarray: [decel, decel, ...]
-        self.max_accel = None  # maximum acceleration, np.ndarray: [accel, accel, ...]
-        self.space_headway = None  # np.ndarray: [space, space, ...]
+        self.com_decel: List[float]= None  # comfortable deceleration, np.ndarray: [decel, decel, ...]
+        self.max_accel: List[float] = None  # maximum acceleration, np.ndarray: [accel, accel, ...]
+        self.space_headway: List[float] = None  # np.ndarray: [space, space, ...]
 
-        self.forward_vector = None  # list: [carla.Vector3D, carla.Vector3D, ...]
-        self.forward_vector_np = None  # np.ndarray: [[x, y], [x, y], ...]
+        self.forward_vector: List[carla.Vector3D] = None  # list: [carla.Vector3D, carla.Vector3D, ...]
+        self.forward_vector_np: np.ndarray = None  # np.ndarray: [[x, y], [x, y], ...]
 
-        self.targets = None  # np.ndarray: [[x, y], [x, y], ...]
+        self.targets: np.ndarray = None  # np.ndarray: [[x, y], [x, y], ...]
 
-        self.lane_index = None  # list: [lane, lane, ...]
+        self.lane_index: List[int] = None  # list: [lane, lane, ...]
         
-        self.users = []  # list: [UserID, UserID, ...]
+        self.users: List[UserID] = []  # list: [UserID, UserID, ...]
 
-        self.half_length = None
-        self.half_width = None
+        self.half_length: List[float] = None
+        self.half_width: List[float] = None
 
         # Data
-        self.bicycle_spawn_data = []  # BicycleData
+        self.bicycle_spawn_data: List[BicycleManager.BicycleData] = []  # BicycleData
         self.__read_bicycle_data()
 
     def __read_bicycle_data(self):

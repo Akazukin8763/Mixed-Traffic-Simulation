@@ -1,16 +1,4 @@
-try:
-    import glob
-    import os
-    import sys
-
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-    
-    import carla
-except:
-    raise ImportError
+import carla
 
 from utils import dot
 
@@ -75,8 +63,15 @@ class Region:
             return False
 
         return True
-    
-    def draw_region(self, debug, height=0.0, thickness=0.1, color=carla.Color(0, 255, 0), life_time=1/30):
+
+    def draw_region(
+        self,
+        debug: carla.DebugHelper,
+        height: float = 0.0,
+        thickness: float = 0.1,
+        color: carla.Color = carla.Color(0, 255, 0),
+        life_time: float = 1 / 30,
+    ):
         p1 = carla.Location(self.a.x, self.a.y, height)
         p2 = carla.Location(self.b.x, self.b.y, height)
         p3 = carla.Location(self.c.x, self.c.y, height)
